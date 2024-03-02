@@ -1,29 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todo_app/controllers/add%20task/add_task_bloc.dart';
+import 'package:todo_app/controllers/home%20bloc/home_bloc.dart';
+import 'package:todo_app/controllers/services/task%20service/task_service.dart';
 import 'package:todo_app/model/task%20model/task_model.dart';
 import 'package:todo_app/views/home/home.dart';
 
-class TaskAddScreenPage extends StatefulWidget {
+class TaskUpdateScreenPage extends StatefulWidget {
+  final TaskModel task;
+  final int index;
+
+  TaskUpdateScreenPage({required this.task, required this.index});
+
   @override
-  _TaskAddScreenPageState createState() => _TaskAddScreenPageState();
+  _TaskUpdateScreenPageState createState() => _TaskUpdateScreenPageState();
 }
 
-class _TaskAddScreenPageState extends State<TaskAddScreenPage> {
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
-  DateTime selectedDate = DateTime.now();
+class _TaskUpdateScreenPageState extends State<TaskUpdateScreenPage> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late DateTime selectedDate;
+  final TaskService taskService = TaskService();
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.task.title);
+    _descriptionController =
+        TextEditingController(text: widget.task.description);
+    selectedDate = widget.task.date;
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
+      lastDate: DateTime(2100),
     );
     if (picked != null && picked != selectedDate)
       setState(() {
-        selectedDate = picked;
+        selectedDate = DateTime(picked.year, picked.month, picked.day, 23, 59);
       });
   }
 
@@ -31,7 +48,7 @@ class _TaskAddScreenPageState extends State<TaskAddScreenPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Task'),
+        title: Text('Update Task'),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -70,24 +87,25 @@ class _TaskAddScreenPageState extends State<TaskAddScreenPage> {
             ),
             SizedBox(height: 20.0),
             ElevatedButton(
-                onPressed: () {
-                  String title = _titleController.text;
-                  String description = _descriptionController.text;
-                  DateTime date = selectedDate;
-                  TaskModel taskDetails = TaskModel(
-                      title: title,
-                      date: date,
-                      description: description,
-                      status: false);
-                  BlocProvider.of<AddTaskBloc>(context)
-                      .add(TaskAddButtonClicked(taskDetails: taskDetails));
-                  Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                      ),
-                      (route) => false);
-                },
-                child: Text('Add task'))
+              onPressed: () {
+                String title = _titleController.text;
+                String description = _descriptionController.text;
+                DateTime date = selectedDate;
+                TaskModel updatedTask = TaskModel(
+                  title: title,
+                  date: date,
+                  description: description,
+                  status: widget.task.status,
+                );
+                taskService.updateTask(widget.index, updatedTask);
+                Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
+                    ),
+                    (route) => false);
+              },
+              child: Text('Update Task'),
+            )
           ],
         ),
       ),
