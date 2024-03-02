@@ -12,6 +12,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+        taskService.getTasks();
+
     Size size = MediaQuery.sizeOf(context);
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
